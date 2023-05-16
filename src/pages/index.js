@@ -5,7 +5,7 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import{ db } from "@/firebase";
 
-import{  collection,  doc,  addDoc,  setDoc, }from "firebase/firestore"
+import{  collection,  doc,  addDoc,  setDoc, deleteDoc }from "firebase/firestore"
 
 export default function Home() {
   /*
@@ -91,6 +91,7 @@ export default function Home() {
     // 해당 메시지 목록을 Firebase에 저장
   };
 
+  // 스레드를 저장하는 함수
   const saveThreadToFirebase = async (threadId, updatedMessages) => {
     const threadRef = doc(db, "threads", threadId);
   
@@ -100,7 +101,18 @@ export default function Home() {
       console.error("Error writing message to Firestore: ", error);
     }
   };
+
+  // (빈) 스레드를 삭제하는 함수
+  const deleteThreadFromFirebase = async (threadId) => {
+    console.log("delete Thread From Firebase");    
+    const threadRef = doc(db, "threads", threadId);
   
+    try {
+      await deleteDoc(threadRef);
+    } catch (error) {
+      console.error("Error deleting document from Firestore: ", error);
+    }
+  };
   // 메시지 목록을 초기화하는 함수
   // 처음 시작할 메시지를 설정
   const handleReset = () => {
@@ -119,13 +131,31 @@ export default function Home() {
 
   // 컴포넌트가 처음 렌더링 될 때 메시지 목록을 초기화, Thread id 획득
   useEffect(() => {
-    console.log("hello");
     handleReset();
     (async () => {
       const id = await startNewThread();
       setThreadId(id);
     })();
   }, []);
+
+  // 메시지가 추가되지 않고 페이지를 벗어나는 경우 생성한 문서 삭제
+  useEffect(() => {
+    const handleBeforeUnload = async (event) => {
+      // 여기서 메시지가 추가되지 않은 경우를 검사합니다.
+      console.log("unload" + messages.length);
+      if (messages.length === 1) {
+        event.preventDefault();
+        await deleteThreadFromFirebase(threadId);
+      }
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [messages, threadId]);
+  
 
   return (
     <>
