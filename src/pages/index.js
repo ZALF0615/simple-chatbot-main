@@ -107,7 +107,7 @@ export default function Home() {
     setMessages([
       {
         role: "assistant",
-        content: "안녕한가, 나는 아인슈타인이네. 무슨 용건이지?",
+        content: "안녕하신가, 나는 아인슈타인이네. 무슨 용건이지?",
       },
     ]);
   };
@@ -143,7 +143,7 @@ export default function Home() {
               className="ml-2 hover:opacity-50"
               href="https://code-scaffold.vercel.app"
             >
-             Einstein Chatbot
+             아인슈타인과 대화하기
             </a>
           </div>
         </div>
