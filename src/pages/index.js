@@ -5,17 +5,7 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import{ db } from "@/firebase";
 
-import{
-  collection,
-  query,
-  doc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  orderBy,
-  where,
-}from "firebase/firestore"
+import{  collection,  doc,  addDoc,  setDoc, }from "firebase/firestore"
 
 export default function Home() {
   /*
@@ -37,7 +27,17 @@ export default function Home() {
   // 메시지를 전송 중인지 여부를 저장하는 상태
   const [loading, setLoading] = useState(false);
 
+  // 스레드 id를 저장하는 상태
+  const [threadId, setThreadId] = useState(null);
+
   const messagesEndRef = useRef(null);
+
+  // 새로운 채팅 세션을 시작할 때 Firestore에 새로운 문서를 생성하고, 그 때 생성된 ID를 가져옵니다.
+  const startNewThread = async () => {
+    const docRef = await addDoc(collection(db, "threads"), { messages: [] });
+    console.log("threadId : " + docRef.id);
+    return docRef.id;  // 새로 생성된 문서의 ID를 반환합니다.
+  };
 
   // 메시지 목록을 끝으로 스크롤
   const scrollToBottom = () => {
@@ -82,15 +82,25 @@ export default function Home() {
       return;
     }
 
-    // Firestore에 메시지를 저장합니다.
-    saveMessageToFirebase(message);
-    saveMessageToFirebase(result);
+    saveThreadToFirebase(threadId, updatedMessages.concat(result));
 
     // 로딩 상태를 해제하고, 메시지 목록에 응답을 추가
     setLoading(false);
     setMessages((messages) => [...messages, result]);
+
+    // 해당 메시지 목록을 Firebase에 저장
   };
 
+  const saveThreadToFirebase = async (threadId, updatedMessages) => {
+    const threadRef = doc(db, "threads", threadId);
+  
+    try {
+      await setDoc(threadRef, { messages: updatedMessages }, { merge: true });
+    } catch (error) {
+      console.error("Error writing message to Firestore: ", error);
+    }
+  };
+  
   // 메시지 목록을 초기화하는 함수
   // 처음 시작할 메시지를 설정
   const handleReset = () => {
@@ -107,21 +117,15 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
-  // 컴포넌트가 처음 렌더링 될 때 메시지 목록을 초기화
+  // 컴포넌트가 처음 렌더링 될 때 메시지 목록을 초기화, Thread id 획득
   useEffect(() => {
+    console.log("hello");
     handleReset();
+    (async () => {
+      const id = await startNewThread();
+      setThreadId(id);
+    })();
   }, []);
-
-  const saveMessageToFirebase = async (message) => {
-    try {
-      // 'log' 컬렉션에 메시지를 추가합니다.
-      // Firestore는 자동으로 문서 ID를 생성합니다.
-      await addDoc(collection(db, "message"), { message: message});
-    } catch (error) {
-      console.error("Error writing message to Firestore: ", error);
-    }
-  };
-  
 
   return (
     <>
