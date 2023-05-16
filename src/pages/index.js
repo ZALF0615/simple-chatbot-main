@@ -1,6 +1,21 @@
 import { Chat } from "@/components/Chat";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
+import firebase from "firebase/app";
+import "firebase/firestore";
+import{ db } from "@/firebase";
+
+import{
+  collection,
+  query,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  orderBy,
+  where,
+}from "firebase/firestore"
 
 export default function Home() {
   /*
@@ -67,7 +82,9 @@ export default function Home() {
       return;
     }
 
-    // console.log(result);
+    // Firestore에 메시지를 저장합니다.
+    saveMessageToFirebase(message);
+    saveMessageToFirebase(result);
 
     // 로딩 상태를 해제하고, 메시지 목록에 응답을 추가
     setLoading(false);
@@ -80,7 +97,7 @@ export default function Home() {
     setMessages([
       {
         role: "assistant",
-        content: "안녕? 나는 엘리엇이야. 오늘은 무슨 일이 있었니?",
+        content: "안녕한가, 나는 아인슈타인이네. 무슨 용건이지?",
       },
     ]);
   };
@@ -95,10 +112,21 @@ export default function Home() {
     handleReset();
   }, []);
 
+  const saveMessageToFirebase = async (message) => {
+    try {
+      // 'log' 컬렉션에 메시지를 추가합니다.
+      // Firestore는 자동으로 문서 ID를 생성합니다.
+      await addDoc(collection(db, "message"), { message: message});
+    } catch (error) {
+      console.error("Error writing message to Firestore: ", error);
+    }
+  };
+  
+
   return (
     <>
       <Head>
-        <title>A Simple Chatbot</title>
+        <title>Einstein Chatbot</title>
         <meta name="description" content="A Simple Chatbot" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
@@ -111,7 +139,7 @@ export default function Home() {
               className="ml-2 hover:opacity-50"
               href="https://code-scaffold.vercel.app"
             >
-              A Simple Chatbot
+             Einstein Chatbot
             </a>
           </div>
         </div>
