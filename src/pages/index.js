@@ -141,7 +141,7 @@ export default function Home() {
           <div className="font-bold text-3xl flex text-center">
             <a
               className="ml-2 hover:opacity-50"
-              href="https://code-scaffold.vercel.app"
+              href="https://simple-chatbot-main.vercel.app/"
             >
              아인슈타인과 대화하기
             </a>
